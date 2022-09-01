@@ -1,15 +1,17 @@
 import dayjs from 'dayjs';
 import React from 'react';
-import ZamgMap, { lastZamgDate, nextZamgDate, prevZamgDate } from './ZamgMap';
+import { lastZamgDate, nextZamgDate, prevZamgDate } from './zamg';
+import ZamgMap from './ZamgMap';
 import './ZamgView.css';
 
 class ZamgView extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            date: lastZamgDate(props.date ?? dayjs())
+            date: lastZamgDate(props.initialDate ?? dayjs()),
+            stations: false,
         };
-        if (!this.state.date.isSame(props.date)) {
+        if (!this.state.date.isSame(props.initialDate)) {
             this.props.onDateChange(this.state.date);
         }
     }
@@ -21,38 +23,29 @@ class ZamgView extends React.Component {
         this.props.onDateChange(date);
     }
 
-    showPrevious() {
-        this.show(this.prevDate);
-    }
-
-    showNext() {
-        this.show(this.nextDate);
-    }
-
-    get nextDate() {
-        return nextZamgDate(this.state.date);
-    }
-
-    get prevDate() {
-        return prevZamgDate(this.state.date);
-    }
-
-    get hasNext() {
-        return !this.nextDate.isAfter(dayjs());
+    toggleStations() {
+        this.setState(state => ({
+            stations: !state.stations
+        }));
     }
 
     render() {
-        const prevButtonLabel = this.prevDate.format('DD.MM.YYYY HH:mm');
-        const nextButtonLabel = this.nextDate.format('DD.MM.YYYY HH:mm');
+        const prevDate = prevZamgDate(this.state.date);
+        const nextDate = nextZamgDate(this.state.date);
+        const hasNext = !nextDate.isAfter(dayjs());
+        const prevButtonLabel = prevDate.format('DD.MM.YYYY HH:mm');
+        const nextButtonLabel = nextDate.format('DD.MM.YYYY HH:mm');
+
         return (
-            <div class="Zamg">
-                <ZamgMap date={this.state.date} className="Zamg-map" />
+            <div className="Zamg">
+                <button onClick={() => this.toggleStations()}>{this.state.stations ? "Weather" : "Stations"}</button>
+                <ZamgMap date={this.state.date} stations={this.state.stations} className="Zamg-map" key={this.state.date} />
                 <div>
-                    <button onClick={() => this.showPrevious()}>&lt; {prevButtonLabel} &lt;</button>
-                    <button onClick={() => this.showNext()} disabled={!this.hasNext}>&gt; {nextButtonLabel} &gt;</button>
+                    <button onClick={() => this.show(prevDate)}>&lt; {prevButtonLabel} &lt;</button>
+                    <button onClick={() => this.show(nextDate)} disabled={!hasNext}>&gt; {nextButtonLabel} &gt;</button>
                 </div>
             </div>
-        )
+        );
     }
 }
 
